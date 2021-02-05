@@ -16,16 +16,22 @@ namespace CI.API.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public EmployeesController(UserManager<User> userManager)
+        public EmployeesController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET api/values http://localhost:5000/api/values
         [HttpPost("create")]
         public async Task<IActionResult> Create(CreateEmployeeViewModel model)
         {
+            if(!(await _roleManager.RoleExistsAsync("Employee")))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Employee"));
+            }
             var employee = new User {
                 UserName = model.Username,
                 Email = model.Email
@@ -34,6 +40,9 @@ namespace CI.API.Controllers
             if(!result.Succeeded){
                 return BadRequest(result);
             }
+
+            var userFromDb = await _userManager.FindByNameAsync(employee.UserName);
+            await _userManager.AddToRoleAsync(userFromDb, "Employee");
             return Ok(result);
         }
 

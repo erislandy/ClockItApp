@@ -49,13 +49,19 @@ namespace CI.API.Controllers
                 token = JwtTokenGeneratormachine(user)
             });
         }
-        private string JwtTokenGeneratormachine(User userInfo){
+        private async Task<string> JwtTokenGeneratormachine(User userInfo){
 
-            var claims = new [] 
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userInfo.Id),
                 new Claim(ClaimTypes.Name, userInfo.UserName)
             };
+
+            var roles = await _userManager.GetRolesAsync(userInfo);
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
             var securityKey =  new SymmetricSecurityKey(Encoding.ASCII
                                 .GetBytes(_config.GetSection("AppSettings:Key").Value));
 
