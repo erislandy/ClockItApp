@@ -37,6 +37,8 @@ namespace CI.API
                 opt.Password.RequiredLength = 4;
             });
             builder.AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.AddSignInManager<SignInManager<User>>();
+            
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("Default")));
 
