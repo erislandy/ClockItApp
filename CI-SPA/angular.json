@@ -31,6 +31,10 @@
               "src/assets"
             ],
             "styles": [
+              "../CI-SPA/node_modules/bootstrap/scss/bootstrap.scss",
+              "../CI-SPA/node_modules/@fortawesome/fontawesome-free/scss/fontawesome.scss",
+              "../CI-SPA/node_modules/@fortawesome/fontawesome-free/scss/solid.scss",
+              "../CI-SPA/node_modules/@fortawesome/fontawesome-free/scss/brands.scss",
               "src/styles.scss"
             ],
             "scripts": []
