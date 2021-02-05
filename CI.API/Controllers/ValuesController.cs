@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CI.DAL;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CI.API.Controllers
 {
@@ -10,18 +12,27 @@ namespace CI.API.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        // GET api/values
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+            private readonly ApplicationDbContext _context;
+
+        public ValuesController(ApplicationDbContext context)
         {
-            return new string[] { "value1", "value2" };
+            _context = context;
+        }
+
+        // GET api/values http://localhost:5000/api/values
+        [HttpGet]
+        public async Task<IActionResult> GetValues()
+        {
+            var values = await _context.Values.ToListAsync();
+            return Ok(values);
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        public async Task<IActionResult> GetValue(int id)
         {
-            return "value";
+            var value = await _context.Values.FirstOrDefaultAsync(v => v.Id == id);
+            return Ok(value);
         }
 
         // POST api/values
@@ -41,5 +52,7 @@ namespace CI.API.Controllers
         public void Delete(int id)
         {
         }
+         
+         
     }
 }
