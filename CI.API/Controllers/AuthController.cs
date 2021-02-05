@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Text;
+using System.Security.Claims;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +10,9 @@ using CI.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Configuration;
 
 namespace CI.API.Controllers
 {
@@ -17,11 +22,15 @@ namespace CI.API.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _singInManager;
+        private readonly IConfiguration _config;
 
-        public AuthController(UserManager<User> userManager, SignInManager<User> singInManager)
+        public AuthController(UserManager<User> userManager, 
+                              SignInManager<User> singInManager,
+                              IConfiguration config)
         {
             _userManager = userManager;
             _singInManager = singInManager;
+            _config = config;
         }
 
         // POST api/auth/login/
@@ -35,28 +44,34 @@ namespace CI.API.Controllers
             if(!result.Succeeded){
                 return BadRequest(result);
             }
-            return Ok(result);
+            return Ok(new {
+                result,
+                token = JwtTokenGeneratormachine(user)
+            });
         }
+        private string JwtTokenGeneratormachine(User userInfo){
 
-      
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
+            var claims = new [] 
+            {
+                new Claim(ClaimTypes.NameIdentifier, userInfo.Id),
+                new Claim(ClaimTypes.Name, userInfo.UserName)
+            };
+            var securityKey =  new SymmetricSecurityKey(Encoding.ASCII
+                                .GetBytes(_config.GetSection("AppSettings:Key").Value));
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = credentials
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+
         }
-         
          
     }
 }

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CI.DAL;
 using CI.DAL.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CI.API
 {
@@ -38,6 +41,19 @@ namespace CI.API
             });
             builder.AddEntityFrameworkStores<ApplicationDbContext>();
             builder.AddSignInManager<SignInManager<User>>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(options => {
+                        
+                        options.TokenValidationParameters = new TokenValidationParameters{
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII
+                                .GetBytes(Configuration.GetSection("AppSettings:Key").Value)),
+                                ValidateIssuer = false,
+                                ValidateAudience = false
+
+                        };
+                    });
             
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("Default")));
@@ -62,7 +78,7 @@ namespace CI.API
                 builder.AllowAnyMethod();
                 builder.AllowAnyHeader();
             });
-
+            app.UseAuthentication();
             app.UseHttpsRedirection();
             app.UseMvc();
         }
