@@ -22,7 +22,7 @@ namespace CI.API.Controllers
 
         // GET api/values http://localhost:5000/api/values
         [HttpGet]
-        [Authorize(Roles="Employee")]
+        [Authorize(Policy="EmployeePolicy")]
         public async Task<IActionResult> GetValues()
         {
             var values = await _context.Values.ToListAsync();
