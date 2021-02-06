@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Configuration;
+using System.Web;
 
 namespace CI.API.Controllers
 {
@@ -49,6 +50,52 @@ namespace CI.API.Controllers
                 token = JwtTokenGeneratormachine(user)
             });
         }
+        
+        [HttpPost("resetpassword")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+    
+            if(user != null && user.EmailConfirmed)
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                /*
+                var changePasswordUrl = Request.Headers["changePasswordUrl"];//http://localhost:4200/change-password
+
+                var uriBuilder = new UriBuilder(changePasswordUrl);
+                var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+                query["token"] = token;
+                query["userid"] = user.Id;
+                uriBuilder.Query = query.ToString();
+                var urlString = uriBuilder.ToString();
+
+                var emailBody = $"Click on link to change password </br>{urlString}";
+                 Not implemented sending email
+                await _email.Send(model.Email, emailBody, _emailOptions.Value);
+
+                return Ok()
+                */
+                 return Ok(new {
+                     token,
+                     UserId = user.Id
+                });
+            }
+           return Unauthorized();
+        }
+        [HttpPost("changepassword")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            var resultPasswordConfirm = await _userManager.ResetPasswordAsync(user, Uri.UnescapeDataString(model.Token), model.Pass);
+            if(resultPasswordConfirm.Succeeded)
+            {
+               
+                return Ok();
+            }
+            return Unauthorized();
+        }
+       
         private async Task<string> JwtTokenGeneratormachine(User userInfo){
 
             var claims = new List<Claim>

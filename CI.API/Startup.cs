@@ -38,11 +38,14 @@ namespace CI.API
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.Password.RequireUppercase = false;
                 opt.Password.RequiredLength = 4;
+                opt.User.RequireUniqueEmail = true;
             });
             builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), builder.Services);
             builder.AddEntityFrameworkStores<ApplicationDbContext>();
             builder.AddSignInManager<SignInManager<User>>();
             builder.AddRoleManager<RoleManager<IdentityRole>>();
+            builder.AddDefaultTokenProviders();
+
 
              services.AddAuthorization(options =>
                 {
